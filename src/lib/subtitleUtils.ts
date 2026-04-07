@@ -42,16 +42,51 @@ export function msToSrtTime(ms: number): string {
   );
 }
 
+export function reflowSubtitle(sub: Subtitle): Subtitle | null {
+  const lines = sub.text.split('\n');
+  if (lines.length <= 2) return null;
+
+  // Flatten all lines into a single string
+  const flat = lines.join(' ').replace(/\s+/g, ' ').trim();
+
+  let bestLine1 = '';
+  let bestLine2 = '';
+  let bestScore = Infinity;
+
+  // Try every word-boundary split position
+  for (let i = 1; i < flat.length; i++) {
+    if (flat[i] !== ' ') continue;
+    const l1 = flat.slice(0, i);
+    const l2 = flat.slice(i + 1);
+    if (l1.length > 40 || l2.length > 40) continue;
+
+    const score = Math.abs(l1.length - l2.length);
+    // Lower score wins; on tie, prefer shorter first line (smaller l1)
+    if (
+      score < bestScore ||
+      (score === bestScore && l1.length < bestLine1.length)
+    ) {
+      bestScore = score;
+      bestLine1 = l1;
+      bestLine2 = l2;
+    }
+  }
+
+  if (!bestLine1) return null;
+  return { ...sub, text: bestLine1 + '\n' + bestLine2 };
+}
+
 export function validateSubtitle(sub: Subtitle): SubtitleIssue[] {
   const issues: SubtitleIssue[] = [];
   const lines = sub.text.split('\n');
 
   if (lines.length > 2) {
+    const canReflow = reflowSubtitle(sub) !== null;
     issues.push({
       code: 'too-many-lines',
       message: `${lines.length} líneas (máx 2)`,
       severity: 'error',
-      fixable: false,
+      fixable: canReflow,
     });
   }
 

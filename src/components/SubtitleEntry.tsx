@@ -10,6 +10,7 @@ interface SubtitleEntryProps {
   onChange: (id: string, field: keyof Subtitle, value: string) => void;
   onDelete: (id: string) => void;
   onShiftFrom: (id: string, deltaMs: number) => void;
+  onFix?: (id: string) => void;
 }
 
 const ISSUE_COLORS: Record<string, string> = {
@@ -25,12 +26,14 @@ export function SubtitleEntry({
   onChange,
   onDelete,
   onShiftFrom,
+  onFix,
 }: SubtitleEntryProps) {
   const [shiftOpen, setShiftOpen] = useState(false);
   const [shiftSec, setShiftSec] = useState('1.0');
 
   const needsReview = issues.some((i) => !i.fixable);
   const hasError = issues.some((i) => i.severity === 'error');
+  const hasReflowFix = issues.some((i) => i.code === 'too-many-lines' && i.fixable);
 
   const borderClass = needsReview
     ? 'border-red-600'
@@ -129,18 +132,26 @@ export function SubtitleEntry({
 
         {/* Issue badges */}
         {issues.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 items-center">
             {issues.map((issue) => (
               <span
                 key={issue.code}
                 className={`rounded px-2 py-0.5 text-xs ${ISSUE_COLORS[issue.code] ?? 'bg-gray-700 text-gray-300'}`}
               >
                 {issue.message}
-                {issue.fixable && (
+                {issue.fixable && issue.code !== 'too-many-lines' && (
                   <span className="ml-1 opacity-70">(auto-corregible)</span>
                 )}
               </span>
             ))}
+            {hasReflowFix && onFix && (
+              <button
+                onClick={() => onFix(subtitle.id)}
+                className="rounded px-2 py-0.5 text-xs font-medium bg-purple-700 hover:bg-purple-600 text-white transition-colors"
+              >
+                Corregir
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useMemo } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { Subtitle } from '@/lib/srt';
-import { validateSubtitle, fixSubtitle, shiftFrom } from '@/lib/subtitleUtils';
+import { validateSubtitle, fixSubtitle, reflowSubtitle, shiftFrom } from '@/lib/subtitleUtils';
 import { SubtitleEntry } from './SubtitleEntry';
 
 const PARSE_SRT = gql`
@@ -30,7 +30,8 @@ export function SubtitleEditor() {
   const [fileName, setFileName] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
   const [search, setSearch] = useState('');
-  const [showOnlyIssues, setShowOnlyIssues] = useState(false);
+  type IssueFilter = 'all' | 'any' | 'review' | 'duration';
+  const [issueFilter, setIssueFilter] = useState<IssueFilter>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [parseSRT, { loading: parsing }] = useMutation<{
@@ -58,10 +59,22 @@ export function SubtitleEditor() {
     [issuesMap]
   );
 
-  const fixableCount = useMemo(
+  const durationFixableCount = useMemo(
     () =>
       [...issuesMap.values()].filter((issues) =>
-        issues.some((i) => i.fixable)
+        issues.some(
+          (i) =>
+            (i.code === 'duration-too-short' || i.code === 'duration-too-long') &&
+            i.fixable
+        )
+      ).length,
+    [issuesMap]
+  );
+
+  const reflowCount = useMemo(
+    () =>
+      [...issuesMap.values()].filter((issues) =>
+        issues.some((i) => i.code === 'too-many-lines' && i.fixable)
       ).length,
     [issuesMap]
   );
@@ -125,6 +138,16 @@ export function SubtitleEditor() {
     setSubtitles((prev) => prev.map(fixSubtitle));
   };
 
+  const handleFixAllReflow = () => {
+    setSubtitles((prev) => prev.map((sub) => reflowSubtitle(sub) ?? sub));
+  };
+
+  const handleFix = useCallback((id: string) => {
+    setSubtitles((prev) =>
+      prev.map((sub) => (sub.id !== id ? sub : reflowSubtitle(sub) ?? sub))
+    );
+  }, []);
+
   const handleShiftFrom = useCallback(
     (id: string, deltaMs: number) => {
       setSubtitles((prev) => shiftFrom(prev, id, deltaMs));
@@ -156,8 +179,16 @@ export function SubtitleEditor() {
 
   const filtered = useMemo(() => {
     let list = subtitles;
-    if (showOnlyIssues) {
+    if (issueFilter === 'any') {
       list = list.filter((s) => (issuesMap.get(s.id)?.length ?? 0) > 0);
+    } else if (issueFilter === 'review') {
+      list = list.filter((s) => issuesMap.get(s.id)?.some((i) => !i.fixable));
+    } else if (issueFilter === 'duration') {
+      list = list.filter((s) =>
+        issuesMap.get(s.id)?.some(
+          (i) => i.code === 'duration-too-short' || i.code === 'duration-too-long'
+        )
+      );
     }
     if (search) {
       list = list.filter(
@@ -168,7 +199,7 @@ export function SubtitleEditor() {
       );
     }
     return list;
-  }, [subtitles, search, showOnlyIssues, issuesMap]);
+  }, [subtitles, search, issueFilter, issuesMap]);
 
   if (!subtitles.length) {
     return (
@@ -252,25 +283,50 @@ export function SubtitleEditor() {
       </div>
 
       {/* Quality bar */}
-      {(needsReviewCount > 0 || fixableCount > 0) && (
+      {(needsReviewCount > 0 || durationFixableCount > 0 || reflowCount > 0) && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg bg-gray-800/60 border border-gray-700 px-4 py-2 text-sm">
           <span className="font-medium text-gray-300">Calidad:</span>
 
           {needsReviewCount > 0 && (
-            <span className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-red-900/50 border border-red-700 text-red-300">
+            <button
+              onClick={() => setIssueFilter('review')}
+              className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-red-900/50 border border-red-700 text-red-300 hover:bg-red-900/80 transition-colors"
+            >
               <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
               {needsReviewCount} necesitan revisión
-            </span>
+            </button>
           )}
 
-          {fixableCount > 0 && (
-            <span className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-orange-900/50 border border-orange-700 text-orange-300">
+          {reflowCount > 0 && (
+            <button
+              onClick={() => setIssueFilter('any')}
+              className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-purple-900/50 border border-purple-700 text-purple-300 hover:bg-purple-900/80 transition-colors"
+            >
+              <span className="h-2 w-2 rounded-full bg-purple-500 inline-block" />
+              {reflowCount} auto-corregibles de texto
+            </button>
+          )}
+
+          {durationFixableCount > 0 && (
+            <button
+              onClick={() => setIssueFilter('duration')}
+              className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-orange-900/50 border border-orange-700 text-orange-300 hover:bg-orange-900/80 transition-colors"
+            >
               <span className="h-2 w-2 rounded-full bg-orange-500 inline-block" />
-              {fixableCount} con duración fuera de rango
-            </span>
+              {durationFixableCount} con duración fuera de rango
+            </button>
           )}
 
-          {fixableCount > 0 && (
+          {reflowCount > 0 && (
+            <button
+              onClick={handleFixAllReflow}
+              className="rounded px-3 py-0.5 text-xs font-medium bg-purple-700 hover:bg-purple-600 text-white"
+            >
+              Corregir texto en todos
+            </button>
+          )}
+
+          {durationFixableCount > 0 && (
             <button
               onClick={handleFixAll}
               className="rounded px-3 py-0.5 text-xs font-medium bg-orange-700 hover:bg-orange-600 text-white"
@@ -279,16 +335,29 @@ export function SubtitleEditor() {
             </button>
           )}
 
-          <button
-            onClick={() => setShowOnlyIssues((v) => !v)}
-            className={`ml-auto rounded px-3 py-0.5 text-xs border transition-colors ${
-              showOnlyIssues
-                ? 'bg-gray-600 border-gray-500 text-white'
-                : 'border-gray-600 text-gray-400 hover:bg-gray-700'
-            }`}
-          >
-            {showOnlyIssues ? 'Mostrar todos' : 'Mostrar solo con problemas'}
-          </button>
+          {/* Filter selector */}
+          <div className="ml-auto flex rounded-lg border border-gray-600 overflow-hidden text-xs">
+            {(
+              [
+                { value: 'all', label: 'Todos' },
+                { value: 'any', label: 'Con problemas' },
+                { value: 'review', label: 'Para revisar' },
+                { value: 'duration', label: 'Duración' },
+              ] as const
+            ).map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setIssueFilter(value)}
+                className={`px-3 py-1 transition-colors ${
+                  issueFilter === value
+                    ? 'bg-gray-600 text-white'
+                    : 'text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -309,6 +378,7 @@ export function SubtitleEditor() {
               onChange={handleChange}
               onDelete={handleDelete}
               onShiftFrom={handleShiftFrom}
+              onFix={handleFix}
             />
           ))
         )}
