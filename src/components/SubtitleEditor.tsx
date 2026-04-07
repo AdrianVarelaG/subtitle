@@ -206,121 +206,118 @@ export function SubtitleEditor() {
       <div
         className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-16 transition-colors ${
           isDragging
-            ? 'border-blue-500 bg-blue-950/30'
-            : 'border-gray-600 bg-gray-900'
+            ? 'border-blue-500 bg-blue-950/40'
+            : 'border-slate-600 bg-slate-900'
         }`}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
       >
-        <svg className="mb-4 h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="mb-4 h-12 w-12 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
         </svg>
-        <p className="mb-2 text-lg font-medium text-gray-300">
-          {parsing ? 'Procesando archivo…' : 'Arrastra un archivo SRT aquí'}
+        <p className="mb-2 text-lg font-semibold text-slate-200">
+          {parsing ? 'Procesando archivo…' : 'Arrastra un archivo SRT aqui'}
         </p>
-        <p className="mb-6 text-sm text-gray-500">o haz clic para buscar</p>
+        <p className="mb-6 text-sm text-slate-400">o haz clic para buscar</p>
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={parsing}
-          className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+          className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
         >
           Abrir archivo SRT
         </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".srt"
-          className="hidden"
-          onChange={handleFileInput}
-        />
+        <input ref={fileInputRef} type="file" accept=".srt" className="hidden" onChange={handleFileInput} />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-400">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="flex flex-col gap-3">
+
+      {/* ── Toolbar ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg bg-slate-800 border border-slate-600 px-3 py-1.5">
+          <svg className="h-4 w-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <span className="font-medium text-gray-200">{fileName}</span>
-          <span className="text-gray-500">·</span>
-          <span>{subtitles.length} entradas</span>
+          <span className="text-sm font-semibold text-slate-100">{fileName}</span>
+          <span className="text-slate-600">·</span>
+          <span className="text-sm text-slate-400">{subtitles.length} entradas</span>
         </div>
 
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar subtítulos…"
-          className="flex-1 min-w-40 rounded-lg bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+          placeholder="Buscar subtitulos..."
+          className="flex-1 min-w-40 rounded-lg bg-slate-900 border border-slate-600 px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400/30"
         />
 
         <div className="ml-auto flex gap-2 flex-wrap">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
+            className="rounded-lg bg-slate-800 border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
           >
             Abrir nuevo
           </button>
           <button
             onClick={handleAdd}
-            className="rounded-lg border border-gray-600 px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700"
+            className="rounded-lg bg-slate-800 border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
           >
-            + Agregar entrada
+            + Agregar
           </button>
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-blue-600 border border-blue-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
           >
             {exporting ? 'Exportando…' : 'Descargar SRT'}
           </button>
         </div>
       </div>
 
-      {/* Quality bar */}
+      {/* ── Quality bar ── */}
       {(needsReviewCount > 0 || durationFixableCount > 0 || reflowCount > 0) && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg bg-gray-800/60 border border-gray-700 px-4 py-2 text-sm">
-          <span className="font-medium text-gray-300">Calidad:</span>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-800 border border-slate-600 px-4 py-2.5">
+          <span className="text-sm font-semibold text-slate-300 mr-1">Calidad:</span>
 
           {needsReviewCount > 0 && (
             <button
               onClick={() => setIssueFilter('review')}
-              className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-red-900/50 border border-red-700 text-red-300 hover:bg-red-900/80 transition-colors"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1 bg-red-900 border border-red-700 text-red-200 text-xs font-medium hover:bg-red-800 transition-colors"
             >
-              <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
-              {needsReviewCount} necesitan revisión
+              <span className="h-2 w-2 rounded-full bg-red-400 shrink-0" />
+              {needsReviewCount} necesitan revision
             </button>
           )}
 
           {reflowCount > 0 && (
             <button
               onClick={() => setIssueFilter('any')}
-              className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-purple-900/50 border border-purple-700 text-purple-300 hover:bg-purple-900/80 transition-colors"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1 bg-violet-900 border border-violet-700 text-violet-200 text-xs font-medium hover:bg-violet-800 transition-colors"
             >
-              <span className="h-2 w-2 rounded-full bg-purple-500 inline-block" />
-              {reflowCount} auto-corregibles de texto
+              <span className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
+              {reflowCount} auto-corregibles
             </button>
           )}
 
           {durationFixableCount > 0 && (
             <button
               onClick={() => setIssueFilter('duration')}
-              className="flex items-center gap-1.5 rounded px-2 py-0.5 bg-orange-900/50 border border-orange-700 text-orange-300 hover:bg-orange-900/80 transition-colors"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1 bg-orange-900 border border-orange-700 text-orange-200 text-xs font-medium hover:bg-orange-800 transition-colors"
             >
-              <span className="h-2 w-2 rounded-full bg-orange-500 inline-block" />
-              {durationFixableCount} con duración fuera de rango
+              <span className="h-2 w-2 rounded-full bg-orange-400 shrink-0" />
+              {durationFixableCount} duracion fuera de rango
             </button>
           )}
+
+          <div className="h-4 w-px bg-slate-600 mx-1" />
 
           {reflowCount > 0 && (
             <button
               onClick={handleFixAllReflow}
-              className="rounded px-3 py-0.5 text-xs font-medium bg-purple-700 hover:bg-purple-600 text-white"
+              className="rounded-md px-3 py-1 text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white transition-colors"
             >
               Corregir texto en todos
             </button>
@@ -329,29 +326,29 @@ export function SubtitleEditor() {
           {durationFixableCount > 0 && (
             <button
               onClick={handleFixAll}
-              className="rounded px-3 py-0.5 text-xs font-medium bg-orange-700 hover:bg-orange-600 text-white"
+              className="rounded-md px-3 py-1 text-xs font-semibold bg-orange-600 hover:bg-orange-500 text-white transition-colors"
             >
-              Corregir duración en todos
+              Corregir duracion en todos
             </button>
           )}
 
           {/* Filter selector */}
-          <div className="ml-auto flex rounded-lg border border-gray-600 overflow-hidden text-xs">
+          <div className="ml-auto flex rounded-lg border border-slate-600 overflow-hidden text-xs font-medium">
             {(
               [
-                { value: 'all', label: 'Todos' },
-                { value: 'any', label: 'Con problemas' },
-                { value: 'review', label: 'Para revisar' },
-                { value: 'duration', label: 'Duración' },
+                { value: 'all',      label: 'Todos' },
+                { value: 'any',      label: 'Con problemas' },
+                { value: 'review',   label: 'Para revisar' },
+                { value: 'duration', label: 'Duracion' },
               ] as const
             ).map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setIssueFilter(value)}
-                className={`px-3 py-1 transition-colors ${
+                className={`px-3 py-1.5 transition-colors ${
                   issueFilter === value
-                    ? 'bg-gray-600 text-white'
-                    : 'text-gray-400 hover:bg-gray-700'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                 }`}
               >
                 {label}
@@ -361,23 +358,21 @@ export function SubtitleEditor() {
         </div>
       )}
 
-      {/* Subtitle table */}
-      <div className="rounded-lg border border-gray-700 overflow-hidden">
+      {/* ── Subtitle table ── */}
+      <div className="rounded-lg border border-slate-700 overflow-hidden bg-slate-900">
         {/* Header */}
-        <div className={`${ROW_GRID} border-b border-gray-700 bg-gray-800/80`}>
-          <div className="px-2 py-1.5 text-right text-[11px] font-medium text-gray-500 select-none">#</div>
-          <div className="py-1.5 px-1 text-[11px] font-medium text-gray-500 uppercase tracking-wide">Inicio</div>
-          <div className="py-1.5 px-1 text-[11px] font-medium text-gray-500 uppercase tracking-wide">Fin</div>
-          <div className="py-1.5 text-center text-[11px] font-medium text-gray-500 uppercase tracking-wide">Dur.</div>
-          <div className="py-1.5 px-1.5 text-[11px] font-medium text-gray-500 uppercase tracking-wide">Texto</div>
+        <div className={`${ROW_GRID} border-b border-slate-700 bg-slate-800`}>
+          <div className="px-2 py-2 text-right text-[11px] font-semibold text-slate-400 select-none">#</div>
+          <div className="py-2 px-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Inicio</div>
+          <div className="py-2 px-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Fin</div>
+          <div className="py-2 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Dur.</div>
+          <div className="py-2 px-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Texto</div>
           <div />
         </div>
 
         {filtered.length === 0 ? (
-          <p className="py-10 text-center text-sm text-gray-500">
-            {search
-              ? `Sin resultados para "${search}"`
-              : 'No hay subtitulos con problemas'}
+          <p className="py-12 text-center text-sm font-medium text-slate-500">
+            {search ? `Sin resultados para "${search}"` : 'No hay subtitulos con problemas'}
           </p>
         ) : (
           filtered.map((sub) => (
