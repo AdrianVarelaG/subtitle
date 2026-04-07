@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { Subtitle } from '@/lib/srt';
 import { validateSubtitle, fixSubtitle, reflowSubtitle, shiftFrom } from '@/lib/subtitleUtils';
-import { SubtitleEntry } from './SubtitleEntry';
+import { SubtitleEntry, ROW_GRID } from './SubtitleEntry';
 
 const PARSE_SRT = gql`
   mutation ParseSRT($content: String!) {
@@ -361,13 +361,23 @@ export function SubtitleEditor() {
         </div>
       )}
 
-      {/* Subtitle list */}
-      <div className="flex flex-col gap-2">
+      {/* Subtitle table */}
+      <div className="rounded-lg border border-gray-700 overflow-hidden">
+        {/* Header */}
+        <div className={`${ROW_GRID} border-b border-gray-700 bg-gray-800/80`}>
+          <div className="px-2 py-1.5 text-right text-[11px] font-medium text-gray-500 select-none">#</div>
+          <div className="py-1.5 px-1 text-[11px] font-medium text-gray-500 uppercase tracking-wide">Inicio</div>
+          <div className="py-1.5 px-1 text-[11px] font-medium text-gray-500 uppercase tracking-wide">Fin</div>
+          <div className="py-1.5 text-center text-[11px] font-medium text-gray-500 uppercase tracking-wide">Dur.</div>
+          <div className="py-1.5 px-1.5 text-[11px] font-medium text-gray-500 uppercase tracking-wide">Texto</div>
+          <div />
+        </div>
+
         {filtered.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-500">
+          <p className="py-10 text-center text-sm text-gray-500">
             {search
               ? `Sin resultados para "${search}"`
-              : 'No hay subtítulos con problemas'}
+              : 'No hay subtitulos con problemas'}
           </p>
         ) : (
           filtered.map((sub) => (
