@@ -29,8 +29,38 @@ npm run lint     # ESLint
 
 **Key files:**
 - `src/lib/srt.ts` — SRT parser and serializer
+- `src/lib/subtitleUtils.ts` — Quality validation, time utilities, reflow and fix helpers
 - `src/lib/graphql/schema.ts` — GraphQL type definitions
 - `src/lib/graphql/resolvers.ts` — Resolvers (thin wrappers over `srt.ts`)
 - `src/components/ApolloWrapper.tsx` — Client-side Apollo provider
-- `src/components/SubtitleEditor.tsx` — Main editor (file upload, subtitle list, search, export)
-- `src/components/SubtitleEntry.tsx` — Single subtitle row with inline editing
+- `src/components/SubtitleEditor.tsx` — Main editor (file upload, subtitle list, search, export, quality bar)
+- `src/components/SubtitleEntry.tsx` — Single subtitle row with inline editing, issue badges, time shift
+
+## Subtitle quality rules
+
+Enforced in `src/lib/subtitleUtils.ts` via `validateSubtitle()`:
+
+| Rule | Threshold | Severity | Auto-fixable |
+|------|-----------|----------|--------------|
+| Max lines | > 2 lines | error | Yes, if text fits in 2×40 chars (`reflowSubtitle`) |
+| Line length | > 40 chars | warning | No |
+| Duration too short | < 1 second | error | Yes (`fixSubtitle` clamps end time) |
+| Duration too long | > 8 seconds | error | Yes (`fixSubtitle` clamps end time) |
+
+**Key functions in `subtitleUtils.ts`:**
+- `validateSubtitle(sub)` → `SubtitleIssue[]`
+- `reflowSubtitle(sub)` → `Subtitle | null` — flattens 3+ lines into 2 balanced lines (≤40 chars each, shorter line first); returns `null` if the text doesn't fit
+- `fixSubtitle(sub)` → `Subtitle` — clamps duration to 1–8 s
+- `shiftFrom(subtitles, fromId, deltaMs)` → `Subtitle[]` — shifts all subtitles from `fromId` forward by `deltaMs` milliseconds
+- `srtTimeToMs(time)` / `msToSrtTime(ms)` — convert between SRT time strings and milliseconds
+
+## Quality bar filters (SubtitleEditor)
+
+The quality bar appears when any issues are detected. Badges are clickable to activate the corresponding filter:
+
+| Filter | Shows |
+|--------|-------|
+| Todos | All subtitles |
+| Con problemas | Any subtitle with at least one issue |
+| Para revisar | Subtitles with non-fixable issues (line count, line length) |
+| Duración | Subtitles with duration out of range |
