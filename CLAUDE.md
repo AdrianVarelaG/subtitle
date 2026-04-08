@@ -33,8 +33,20 @@ npm run lint     # ESLint
 - `src/lib/graphql/schema.ts` — GraphQL type definitions
 - `src/lib/graphql/resolvers.ts` — Resolvers (thin wrappers over `srt.ts`)
 - `src/components/ApolloWrapper.tsx` — Client-side Apollo provider
-- `src/components/SubtitleEditor.tsx` — Main editor (file upload, subtitle list, search, export, quality bar)
-- `src/components/SubtitleEntry.tsx` — Single subtitle row with inline editing, issue badges, time shift
+- `src/components/SubtitleEditor.tsx` — Main editor (file upload, subtitle list, search, export, quality bar, filter)
+- `src/components/SubtitleEntry.tsx` — Single subtitle row; exports `ROW_GRID` (shared CSS grid template used by the table header in SubtitleEditor)
+
+## UI layout
+
+The subtitle list is a CSS-grid table with columns `[2.5rem_9.5rem_9.5rem_3.5rem_1fr_5.5rem]` (`#`, Inicio, Fin, Dur., Texto, Acciones). The column definition is exported as `ROW_GRID` from `SubtitleEntry.tsx` so the header row in `SubtitleEditor.tsx` stays in sync automatically.
+
+**Color palette** (Tailwind slate scale, dark theme):
+- Page background: `slate-950`; table surface: `slate-900`; header/toolbar: `slate-800`
+- Borders: `slate-600` (always visible); focus: `blue-400`
+- Primary text: `slate-100`; secondary: `slate-400`; muted: `slate-500`
+- Timestamps: `emerald-400`; duration out of range: `orange-400`
+- Severity stripes: `border-l-4` in `red-500` / `orange-500` / `amber-500`
+- Issue badges: opaque `bg-*-800 text-*-100` for high contrast
 
 ## Subtitle quality rules
 
